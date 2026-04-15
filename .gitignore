@@ -40,9 +40,15 @@ Thumbs.db
 # =========================
 # Data (VERY IMPORTANT)
 # =========================
-data/raw/
-data/interim/
-data/processed/
+data/raw/*
+data/interim/*
+data/processed/*
+
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/processed/heatmaps/
+!data/processed/heatmaps/*.png
 
 # =========================
 # Model files
