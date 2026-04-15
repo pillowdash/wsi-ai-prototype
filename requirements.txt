@@ -1,0 +1,11 @@
+openslide-python
+numpy
+pillow
+matplotlib
+pandas
+opencv-python
+pyyaml
+tqdm
+torch
+torchvision
+scikit-image

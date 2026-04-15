@@ -33,3 +33,4 @@ Future work will focus on replacing the current model with a pathology-specific 
 - Whole-slide image processing workflows
 - Model inference and visualization experiments
 - Educational demonstrations of WSI-based AI systems
+

@@ -1,0 +1,78 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Environment variables
+# =========================
+.env
+
+# =========================
+# Data (VERY IMPORTANT)
+# =========================
+data/raw/
+data/interim/
+data/processed/
+
+# =========================
+# Model files
+# =========================
+models/checkpoints/
+models/exported/
+*.pth
+*.pt
+
+# =========================
+# Large images / outputs
+# =========================
+*.tif
+*.svs
+*.ndpi
+*.png
+*.jpg
+
+# (optional: allow small demo images)
+!data/processed/heatmaps/*.png
+
+# =========================
+# Cache / temp
+# =========================
+*.tmp
+*.cache/
+
+# =========================
+# Python packaging
+# =========================
+build/
+dist/
+*.egg-info/
