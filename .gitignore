@@ -7,7 +7,9 @@ __pycache__/
 *.pyd
 *.so
 
+# =========================
 # Virtual environments
+# =========================
 .venv/
 venv/
 env/
@@ -23,8 +25,6 @@ ENV/
 # =========================
 .DS_Store
 Thumbs.db
-
-# VS Code
 .vscode/
 
 # =========================
@@ -38,15 +38,18 @@ Thumbs.db
 .env
 
 # =========================
-# Data (VERY IMPORTANT)
+# Data (keep structure only)
 # =========================
 data/raw/*
 data/interim/*
 data/processed/*
 
+# Allow folder placeholders
 !data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
+
+# Allow demo heatmaps (optional but recommended)
 !data/processed/heatmaps/
 !data/processed/heatmaps/*.png
 
@@ -59,19 +62,15 @@ models/exported/
 *.pt
 
 # =========================
-# Large images / outputs
+# Large WSI / image files
 # =========================
 *.tif
+*.tiff
 *.svs
 *.ndpi
-*.png
-*.jpg
-
-# (optional: allow small demo images)
-!data/processed/heatmaps/*.png
 
 # =========================
-# Cache / temp
+# Temp / cache
 # =========================
 *.tmp
 *.cache/
