@@ -34,3 +34,18 @@ Future work will focus on replacing the current model with a pathology-specific 
 - Model inference and visualization experiments
 - Educational demonstrations of WSI-based AI systems
 
+## Data
+
+Large datasets (WSIs, extracted tiles, and model checkpoints) are excluded from this repository.
+
+To reproduce results:
+
+1. Download sample slides
+2. Run tile extraction
+3. Run inference
+4. Generate heatmap overlays
+
+## Download Sample Data
+
+```bash
+./scripts/download_dataset.sh
