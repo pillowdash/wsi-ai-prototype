@@ -20,10 +20,10 @@ The goal is to simulate core components of a digital pathology AI system, includ
 - Modular and extensible project structure
 
 ## Example Output
-Using device: cuda
-Found 300 tiles
-Saved predictions to: data/processed/predictions/tumor_005_predictions.csv
-Saved heatmap overlay to: data/processed/heatmaps/tumor_005_overlay.png
+- Using device: cuda
+- Found 300 tiles
+- Saved predictions to: `data/processed/predictions/tumor_005_predictions.csv`
+- Saved heatmap overlay to: `data/processed/heatmaps/tumor_005_overlay.png`
 
 ### Run inference
 
