@@ -30,7 +30,7 @@ Saved heatmap overlay to: data/processed/heatmaps/tumor_005_overlay.png
 ```bash
 python scripts/run_inference.py
 python scripts/generate_heatmap.py
-
+```
 ## Results and Observations
 
 After introducing tissue-aware tile extraction and border filtering, the heatmap shifted from slide-edge artifacts to tissue-localized activations. This shows that the pipeline is correctly focusing inference on biologically relevant regions, even though the current model is not yet trained on histopathology data.
@@ -71,3 +71,4 @@ To reproduce results:
 
 ```bash
 ./scripts/download_dataset.sh
+```
