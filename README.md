@@ -74,8 +74,9 @@ This confirms that:
 - PyTorch is using GPU acceleration
 - The container is correctly configured for NVIDIA runtime
 ```
-
+```md
 run to execute the inference script:
+```
 ```bash
 docker run --rm \
   --gpus all \
@@ -85,8 +86,9 @@ docker run --rm \
   wsi-ai \
   python scripts/run_inference.py --input_dir /app/data/raw --output_dir /app/data/processed
 ```
-
+```md
  enter an interactive shell for debugging:
+```
  ```bash
 docker run --rm --gpus all -it -v ... wsi-ai bash
 ```
