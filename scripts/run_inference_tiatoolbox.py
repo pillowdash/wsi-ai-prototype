@@ -2,6 +2,8 @@ from pathlib import Path
 import argparse
 import re
 import pandas as pd
+from PIL import Image
+import tempfile
 
 from tiatoolbox.models.engine.patch_predictor import PatchPredictor
 
@@ -54,7 +56,23 @@ def main():
         print(f"No tiles found in {tiles_dir}")
         return
 
-    tile_paths_str = [str(p) for p in tile_paths]
+    # tile_paths_str = [str(p) for p in tile_paths]
+    tile_paths = sorted(tiles_dir.glob("*.png"))
+
+
+    resized_tile_paths = []
+    tmp_dir = Path(tempfile.mkdtemp())
+
+    print("Resizing tiles to 96x96 for PCam model...")
+
+    for p in tile_paths:
+        img = Image.open(p).convert("RGB")
+        img = img.resize((96, 96))
+
+        out_path = tmp_dir / p.name
+        img.save(out_path)
+
+        resized_tile_paths.append(str(out_path))
 
     print(f"Using TIAToolbox model: {args.model}")
     print(f"Using device: {args.device}")
@@ -69,7 +87,8 @@ def main():
     )
 
     output = predictor.run(
-        tile_paths_str,
+        resized_tile_paths,
+        #tile_paths_str,
         patch_mode=True,
         return_probabilities=True,
     )

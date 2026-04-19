@@ -7,6 +7,8 @@ opencv-python
 pyyaml
 tqdm
 scikit-image
+scipy
 fastapi
 uvicorn
+tiatoolbox
 
