@@ -19,6 +19,28 @@ The goal is to simulate core components of a digital pathology AI system, includ
 - Heatmap generation for region-level interpretation
 - Modular and extensible project structure
 
+## Example Output
+- Using device: cuda
+- Found 300 tiles
+- Saved predictions to: `data/processed/predictions/tumor_005_predictions.csv`
+- Saved heatmap overlay to: `data/processed/heatmaps/tumor_005_overlay.png`
+
+### Run inference
+
+```bash
+python scripts/run_inference.py
+python scripts/generate_heatmap.py
+```
+## Results and Observations
+
+After introducing tissue-aware tile extraction and border filtering, the heatmap shifted from slide-edge artifacts to tissue-localized activations. This shows that the pipeline is correctly focusing inference on biologically relevant regions, even though the current model is not yet trained on histopathology data.
+
+This improvement was driven by:
+- excluding border regions during tile extraction
+- building a tissue mask from the slide thumbnail
+- sampling only tissue-positive tile locations
+- exporting tile metadata for more structured downstream processing
+
 ## Current Status
 
 This prototype validates the technical pipeline for WSI processing and visualization.
@@ -49,3 +71,4 @@ To reproduce results:
 
 ```bash
 ./scripts/download_dataset.sh
+```
