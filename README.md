@@ -45,7 +45,7 @@ docker run --rm \
 docker run --rm \
   --gpus all \
   -v "$(pwd)/data:/app/data" \
-  -v "/home/your-user/path/to/models:/app/models_external" \
+  -v "/path/to/your/models:/app/models_external" \
   wsi-ai \
   python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
 ```
@@ -73,6 +73,22 @@ This confirms that:
 - CUDA is available inside the container
 - PyTorch is using GPU acceleration
 - The container is correctly configured for NVIDIA runtime
+```
+
+run to execute the inference script:
+```bash
+docker run --rm \
+  --gpus all \
+  -v "$(pwd)/data:/app/data" \
+  -v "/path/to/your/models:/app/models_external" \
+  -e CHECKPOINT_PATH=/app/models_external/best_model.pth \
+  wsi-ai \
+  python scripts/run_inference.py --input_dir /app/data/raw --output_dir /app/data/processed
+```
+
+ enter an interactive shell for debugging:
+ ```bash
+docker run --rm --gpus all -it -v ... wsi-ai bash
 ```
 
 ## Example Output
