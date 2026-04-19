@@ -14,10 +14,11 @@ parser.add_argument("--slide", required=True, help="Path to WSI slide file")
 args = parser.parse_args()
 
 SLIDE_PATH = Path(args.slide)
-
+SLIDE_ID = SLIDE_PATH.stem
 # Replace the hardcoded path 
 # SLIDE_PATH = Path("data/raw/camelyon16/images/tumor_005.tif")
-OUTPUT_DIR = Path("data/processed/tiles/tumor_005")
+# OUTPUT_DIR = Path("data/processed/tiles/tumor_005")
+OUTPUT_DIR = Path(f"data/processed/tiles/{SLIDE_ID}")
 INDEX_DIR = Path("data/interim/tile_index")
 THUMB_DIR = Path("data/interim/thumbnails")
 MASK_DIR = Path("data/interim/tissue_masks")
