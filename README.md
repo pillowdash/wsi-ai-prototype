@@ -158,21 +158,29 @@ To reproduce results:
 
 ## API Usage
 
-Run the API:
+The project includes a lightweight **FastAPI** backend (`api/app.py`) that exposes a REST endpoint for WSI inference. This demonstrates how the pipeline could be served in a clinical IMS for on-demand AI predictions and heatmap generation.
+
+### 1. Build and Run the API with Docker (GPU-enabled)
 
 ```bash
+# Build the image (once)
+docker build -t wsi-ai .
+
+# Run the API server
 docker run --rm \
   --gpus all \
   -p 8000:8000 \
   -v "$(pwd)/data:/app/data" \
-  -v "/path/to/models:/app/models_external" \
+  -v "/absolute/path/to/your/models:/app/models_external:ro" \
   -e CHECKPOINT_PATH=/app/models_external/best_model.pth \
+  --name wsi-ai-api \
   wsi-ai
 ```
 
-Open Swagger UI:
+### 2.Access the interative Swagger UI:
+http://localhost:8000/docs
 
-Example request:
+### 3.Example request:
 
 ```bash
 curl -X POST "http://localhost:8000/predict" \
@@ -180,7 +188,7 @@ curl -X POST "http://localhost:8000/predict" \
   -d '{"slide_name": "tumor_005.tif"}'
 ```
 
-Example response:
+### 4.Example response:
 
 ```bash
 {
