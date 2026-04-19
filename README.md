@@ -52,8 +52,6 @@ docker run --rm \
 
 ---
 
-## 2. Output block
-
 ```md
 Example output:
 
