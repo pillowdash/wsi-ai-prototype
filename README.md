@@ -128,7 +128,10 @@ This improvement was driven by:
 
 This prototype validates the technical pipeline for WSI processing and visualization.
 
-It currently reuses a trained model from our [Bone-Fracture-Detection](https://github.com/pillowdash/Bone-Fracture-Detection) project. Since that model was trained for fracture detection on X-ray images rather than histopathology data, the current heatmaps are not yet clinically meaningful for pathology use and may emphasize non-tissue artifacts.
+UPDATE : This prototype now uses a pathology-specific pretrained patch classification model from TIAToolbox (PCam) for tile-level inference on CAMELYON slides. Compared with the earlier fracture-trained baseline, this improves the domain relevance of the generated heatmaps for digital pathology workflows.
+
+The current pipeline still uses a simplified tile extraction and aggregation strategy, so future work will focus on stronger pathology-specific training, evaluation, and improved region-level visualization.
+~~It currently reuses a trained model from our [Bone-Fracture-Detection](https://github.com/pillowdash/Bone-Fracture-Detection) project. Since that model was trained for fracture detection on X-ray images rather than histopathology data, the current heatmaps are not yet clinically meaningful for pathology use and may emphasize non-tissue artifacts.~~
 
 Future work will focus on replacing the current model with a pathology-specific model trained on WSI tile datasets (e.g., CAMELYON), along with improved tissue-region sampling and evaluation.
 
