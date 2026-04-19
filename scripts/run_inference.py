@@ -14,8 +14,17 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 OUTPUT_CSV = OUTPUT_DIR / "tumor_005_predictions.csv"
 
-# Update this path to your real trained checkpoint
-CHECKPOINT_PATH = Path("/home/pillowdash/git_projects/Bone-Fracture-Detection/outputs/models/best_model.pth")
+# Update this path to your real trained checkpoint - not using Docker
+# CHECKPOINT_PATH = Path("/home/pillowdash/git_projects/Bone-Fracture-Detection/outputs/models/best_model.pth")
+
+# For Docker : Mount the model folder into the container and update the script to use the container path
+# CHECKPOINT_PATH = Path("/app/models_external/best_model.pth")
+import os
+from pathlib import Path
+
+CHECKPOINT_PATH = Path(
+    os.environ.get("CHECKPOINT_PATH", "/app/models_external/best_model.pth")
+)
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 IMAGE_SIZE = 224
