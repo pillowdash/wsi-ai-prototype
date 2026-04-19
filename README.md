@@ -55,7 +55,7 @@ docker run --rm \
 ```md
 Example output:
 
-```text
+
 ==========
 == CUDA ==
 ==========
@@ -66,7 +66,7 @@ CUDA Version 12.1.1
 12.1
 True
 NVIDIA GeForce RTX 3070 Ti Laptop GPU
-```
+
 ```
 
 ## Example Output
