@@ -19,6 +19,58 @@ The goal is to simulate core components of a digital pathology AI system, includ
 - Heatmap generation for region-level interpretation
 - Modular and extensible project structure
 
+## Docker
+
+The project can be containerized for reproducible execution. Large datasets and model checkpoints are excluded from the image and should be mounted at runtime.
+
+Example:
+
+```bash
+docker build -t wsi-ai .
+
+# configure Docker for NVIDIA runtime:
+sudo nvidia-ctk runtime configure --runtime=docker
+# Restart Docker
+sudo systemctl restart docker
+docker run --rm --gpus all nvidia/cuda:12.2.0-base-ubuntu22.04 nvidia-smi
+docker run --rm \
+  -v "$(pwd)/data:/app/data" \
+  -v "/home/pillowdash/git_projects/Bone-Fracture-Detection/outputs/models:/app/models_external" \
+  -e CHECKPOINT_PATH=/app/models_external/best_model.pth \
+  wsi-ai
+```
+### Verify GPU inside Docker
+
+```bash
+docker run --rm \
+  --gpus all \
+  -v "$(pwd)/data:/app/data" \
+  -v "/home/your-user/path/to/models:/app/models_external" \
+  wsi-ai \
+  python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
+```
+
+---
+
+## 2. Output block
+
+```md
+Example output:
+
+```text
+==========
+== CUDA ==
+==========
+
+CUDA Version 12.1.1
+
+2.5.1+cu121
+12.1
+True
+NVIDIA GeForce RTX 3070 Ti Laptop GPU
+```
+```
+
 ## Example Output
 - Using device: cuda
 - Found 300 tiles
