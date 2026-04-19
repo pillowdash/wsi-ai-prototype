@@ -23,4 +23,8 @@ RUN pip install --no-cache-dir \
 
 COPY . .
 
-CMD ["python", "scripts/run_inference.py"]
+# uncomment this line below to run the script 
+# CMD ["python", "scripts/run_inference.py"]
+
+# to run the API instead of the script
+CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -5,7 +5,18 @@ import numpy as np
 import openslide
 from PIL import Image
 
-SLIDE_PATH = Path("data/raw/camelyon16/images/tumor_005.tif")
+from pathlib import Path
+import argparse
+
+# --- CLI arguments ---
+parser = argparse.ArgumentParser(description="Extract tiles from a WSI slide")
+parser.add_argument("--slide", required=True, help="Path to WSI slide file")
+args = parser.parse_args()
+
+SLIDE_PATH = Path(args.slide)
+
+# Replace the hardcoded path 
+# SLIDE_PATH = Path("data/raw/camelyon16/images/tumor_005.tif")
 OUTPUT_DIR = Path("data/processed/tiles/tumor_005")
 INDEX_DIR = Path("data/interim/tile_index")
 THUMB_DIR = Path("data/interim/thumbnails")
@@ -167,7 +178,7 @@ def is_mostly_background(tile: Image.Image, threshold: int = 220, white_ratio: f
 def main() -> None:
     if not SLIDE_PATH.exists():
         raise FileNotFoundError(f"Slide not found: {SLIDE_PATH}")
-
+# --- main logic ---
     slide = openslide.OpenSlide(str(SLIDE_PATH))
     level_width, level_height = slide.level_dimensions[LEVEL]
     downsample = slide.level_downsamples[LEVEL]

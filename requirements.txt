@@ -7,4 +7,6 @@ opencv-python
 pyyaml
 tqdm
 scikit-image
+fastapi
+uvicorn
 

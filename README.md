@@ -3,6 +3,7 @@
 This project is a prototype for applying AI to Whole Slide Images (WSIs) in digital pathology.
 
 It demonstrates an end-to-end pipeline that:
+
 - Loads high-resolution pathology slides (SVS/TIFF) using OpenSlide
 - Extracts tissue tiles from large WSIs
 - Performs tile-level inference using a ResNet-based deep learning model (PyTorch)
@@ -39,6 +40,7 @@ docker run --rm \
   -e CHECKPOINT_PATH=/app/models_external/best_model.pth \
   wsi-ai
 ```
+
 ### Verify GPU inside Docker
 
 ```bash
@@ -55,7 +57,6 @@ docker run --rm \
 ```md
 Example output:
 
-
 ==========
 == CUDA ==
 ==========
@@ -66,17 +67,20 @@ CUDA Version 12.1.1
 12.1
 True
 NVIDIA GeForce RTX 3070 Ti Laptop GPU
-
 ```
+
 ```md
 This confirms that:
+
 - CUDA is available inside the container
 - PyTorch is using GPU acceleration
 - The container is correctly configured for NVIDIA runtime
 ```
+
 ```md
 run to execute the inference script:
 ```
+
 ```bash
 docker run --rm \
   --gpus all \
@@ -86,14 +90,17 @@ docker run --rm \
   wsi-ai \
   python scripts/run_inference.py --input_dir /app/data/raw --output_dir /app/data/processed
 ```
+
 ```md
- enter an interactive shell for debugging:
+enter an interactive shell for debugging:
 ```
- ```bash
+
+```bash
 docker run --rm --gpus all -it -v ... wsi-ai bash
 ```
 
 ## Example Output
+
 - Using device: cuda
 - Found 300 tiles
 - Saved predictions to: `data/processed/predictions/tumor_005_predictions.csv`
@@ -105,11 +112,13 @@ docker run --rm --gpus all -it -v ... wsi-ai bash
 python scripts/run_inference.py
 python scripts/generate_heatmap.py
 ```
+
 ## Results and Observations
 
 After introducing tissue-aware tile extraction and border filtering, the heatmap shifted from slide-edge artifacts to tissue-localized activations. This shows that the pipeline is correctly focusing inference on biologically relevant regions, even though the current model is not yet trained on histopathology data.
 
 This improvement was driven by:
+
 - excluding border regions during tile extraction
 - building a tissue mask from the slide thumbnail
 - sampling only tissue-positive tile locations
@@ -145,4 +154,40 @@ To reproduce results:
 
 ```bash
 ./scripts/download_dataset.sh
+```
+
+## API Usage
+
+Run the API:
+
+```bash
+docker run --rm \
+  --gpus all \
+  -p 8000:8000 \
+  -v "$(pwd)/data:/app/data" \
+  -v "/path/to/models:/app/models_external" \
+  -e CHECKPOINT_PATH=/app/models_external/best_model.pth \
+  wsi-ai
+```
+
+Open Swagger UI:
+
+Example request:
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -d '{"slide_name": "tumor_005.tif"}'
+```
+
+Example response:
+
+```bash
+{
+  "slide_name": "tumor_005.tif",
+  "predictions_csv": "data/processed/predictions/tumor_005_predictions.csv",
+  "heatmap_image": "data/processed/heatmaps/tumor_005_overlay.png",
+  "tiles_processed": 877,
+  "status": "completed in 12.4s"
+}
 ```
