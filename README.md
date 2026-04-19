@@ -68,6 +68,12 @@ True
 NVIDIA GeForce RTX 3070 Ti Laptop GPU
 
 ```
+```md
+This confirms that:
+- CUDA is available inside the container
+- PyTorch is using GPU acceleration
+- The container is correctly configured for NVIDIA runtime
+```
 
 ## Example Output
 - Using device: cuda
