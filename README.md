@@ -101,7 +101,7 @@ This improvement was driven by:
 
 This prototype validates the technical pipeline for WSI processing and visualization.
 
-It currently reuses a trained model from my [Bone-Fracture-Detection](https://github.com/pillowdash/Bone-Fracture-Detection) project. Since that model was trained for fracture detection on X-ray images rather than histopathology data, the current heatmaps are not yet clinically meaningful for pathology use and may emphasize non-tissue artifacts.
+It currently reuses a trained model from our [Bone-Fracture-Detection](https://github.com/pillowdash/Bone-Fracture-Detection) project. Since that model was trained for fracture detection on X-ray images rather than histopathology data, the current heatmaps are not yet clinically meaningful for pathology use and may emphasize non-tissue artifacts.
 
 Future work will focus on replacing the current model with a pathology-specific model trained on WSI tile datasets (e.g., CAMELYON), along with improved tissue-region sampling and evaluation.
 
