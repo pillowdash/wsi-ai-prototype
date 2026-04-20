@@ -140,7 +140,7 @@ Future work will focus on replacing the current model with a pathology-specific 
 ![Heatmap before TIAToolbox upgrade](img/tumor_005_overlay_usingBoneFractureDectionTraning.png)
 *Before: ResNet from Bone-Fracture-Detection project (note edge/non-tissue artifacts).*
 
-![Heatmap after TIAToolbox + PCam model](images/tumor_005_overlay_usingTIAToolbox.png)
+![Heatmap after TIAToolbox + PCam model](img/tumor_005_overlay_usingTIAToolbox.png)
 *After: TIAToolbox PCam model — predictions are now focused on relevant histopathology features.*
 
 ## Use Cases
