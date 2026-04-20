@@ -190,7 +190,10 @@ docker run --rm \
 ```
 
 ### 2.Access the interative Swagger UI:
+After the container is running, open your browser and go to
 http://localhost:8000/docs
+You will see the full interactive API documentation where you can test all endpoints directly in the browser
+
 
 ### 3.Example request:
 
