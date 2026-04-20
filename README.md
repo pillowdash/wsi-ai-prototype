@@ -135,6 +135,14 @@ The current pipeline still uses a simplified tile extraction and aggregation str
 
 Future work will focus on replacing the current model with a pathology-specific model trained on WSI tile datasets (e.g., CAMELYON), along with improved tissue-region sampling and evaluation.
 
+### Model Upgrade: Before vs After Heatmaps
+
+![Heatmap before TIAToolbox upgrade](img/tumor_005_overlay_usingBoneFractureDectionTraning.png)
+*Before: ResNet from Bone-Fracture-Detection project (note edge/non-tissue artifacts).*
+
+![Heatmap after TIAToolbox + PCam model](images/tumor_005_overlay_usingTIAToolbox.png)
+*After: TIAToolbox PCam model — predictions are now focused on relevant histopathology features.*
+
 ## Use Cases
 
 - Digital pathology AI prototyping
