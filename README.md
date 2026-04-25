@@ -167,7 +167,13 @@ To reproduce results:
 2. Run tile extraction
 3. Run inference
 4. Generate heatmap overlays
-5. 
+
+### Notes on Annotations
+
+Annotation XML files are not required for the basic inference pipeline, but they are used in this project for ground-truth visualization and qualitative validation (or for future supervised training) .
+
+The `metadata/` folder stores remote annotation listings from CAMELYON16. Specific XML annotation files are downloaded only when needed, such as for generating polygon overlays, comparing model heatmaps against annotated tumor regions, or supporting future supervised training and evaluation workflows.
+   
 ### Notes on Annotations
 
 Annotation XML files are not required at the moment ( for the current inference prototype ). The metadata folder stores available remote annotation listings, while annotations are downloaded only when needed for supervised training or evaluation.
