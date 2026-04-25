@@ -4,9 +4,14 @@ import pandas as pd
 from PIL import Image
 import matplotlib.pyplot as plt
 
-PREDICTIONS_CSV = Path("data/processed/predictions/tumor_005_predictions.csv")
-THUMBNAIL_PATH = Path("data/interim/thumbnails/tumor_005_thumbnail.png")
-OUTPUT_PATH = Path("data/processed/heatmaps/tumor_005_overlay.png")
+PREDICTIONS_CSV = Path("data/processed/predictions/test_001_predictions.csv")
+THUMBNAIL_PATH = Path("data/interim/thumbnails/test_001_thumbnail.png")
+OUTPUT_PATH = Path("data/processed/heatmaps/tumor_001_overlay.png")
+
+
+# PREDICTIONS_CSV = Path("data/processed/predictions/tumor_005_predictions.csv")
+# THUMBNAIL_PATH = Path("data/interim/thumbnails/tumor_005_thumbnail.png")
+# OUTPUT_PATH = Path("data/processed/heatmaps/tumor_005_overlay.png")
 OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 TILE_SIZE = 256
