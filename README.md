@@ -161,6 +161,10 @@ To reproduce results:
 2. Run tile extraction
 3. Run inference
 4. Generate heatmap overlays
+5. 
+### Notes on Annotations
+
+Annotation XML files are not required at the moment ( for the current inference prototype ). The metadata folder stores available remote annotation listings, while annotations are downloaded only when needed for supervised training or evaluation.
 
 ## Download Sample Data
 
