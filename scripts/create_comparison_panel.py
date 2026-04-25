@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Create side-by-side comparison panel: thumbnail, polygon overlay, heatmap overlay."
+        description="Create side-by-side comparison panel: thumbnail, polygon overlay, heatmap overlay, and combined overlay."
     )
     parser.add_argument(
         "--slide",
@@ -66,12 +66,14 @@ def scale_polygon(polygon, scale_x, scale_y):
     return [(x * scale_x, y * scale_y) for x, y in polygon]
 
 
-def create_polygon_overlay(thumbnail: Image.Image, polygons, slide_w, slide_h):
-    thumb_w, thumb_h = thumbnail.size
-    scale_x = thumb_w / slide_w
-    scale_y = thumb_h / slide_h
+def create_polygon_only_overlay(base_image: Image.Image, polygons, slide_w, slide_h):
+    base_rgba = base_image.convert("RGBA")
+    width, height = base_rgba.size
 
-    overlay = Image.new("RGBA", thumbnail.size, (0, 0, 0, 0))
+    scale_x = width / slide_w
+    scale_y = height / slide_h
+
+    overlay = Image.new("RGBA", base_rgba.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay, "RGBA")
 
     outline_color = (255, 0, 0, 255)
@@ -82,7 +84,33 @@ def create_polygon_overlay(thumbnail: Image.Image, polygons, slide_w, slide_h):
         if len(scaled) >= 2:
             draw.polygon(scaled, fill=fill_color, outline=outline_color)
 
-    combined = Image.alpha_composite(thumbnail.convert("RGBA"), overlay)
+    combined = Image.alpha_composite(base_rgba, overlay)
+    return combined
+
+
+def create_combined_overlay(base_image: Image.Image, heatmap_img: Image.Image, polygons, slide_w, slide_h):
+    base_rgba = base_image.convert("RGBA")
+    heatmap_rgba = heatmap_img.convert("RGBA").resize(base_rgba.size, Image.Resampling.LANCZOS)
+
+    # Blend thumbnail and heatmap
+    blended = Image.blend(base_rgba, heatmap_rgba, alpha=0.45)
+
+    width, height = blended.size
+    scale_x = width / slide_w
+    scale_y = height / slide_h
+
+    polygon_layer = Image.new("RGBA", blended.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(polygon_layer, "RGBA")
+
+    outline_color = (255, 0, 0, 255)
+    fill_color = (255, 0, 0, 50)
+
+    for polygon in polygons:
+        scaled = scale_polygon(polygon, scale_x, scale_y)
+        if len(scaled) >= 2:
+            draw.polygon(scaled, fill=fill_color, outline=outline_color)
+
+    combined = Image.alpha_composite(blended, polygon_layer)
     return combined
 
 
@@ -143,23 +171,36 @@ def main():
     else:
         output_dir = Path("data/processed/comparisons")
         output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = output_dir / f"{slide_id}_comparison_panel.png"
+        output_path = output_dir / f"{slide_id}_comparison_panel_v2.png"
 
     slide = openslide.OpenSlide(str(slide_path))
     slide_w, slide_h = slide.dimensions
 
     thumbnail = slide.get_thumbnail((args.thumb_size, args.thumb_size)).convert("RGBA")
     polygons = parse_polygons(annotation_path)
-    polygon_overlay = create_polygon_overlay(thumbnail, polygons, slide_w, slide_h)
+
+    polygon_overlay = create_polygon_only_overlay(thumbnail, polygons, slide_w, slide_h)
 
     heatmap_img = Image.open(heatmap_path).convert("RGB")
     heatmap_img = heatmap_img.resize(thumbnail.size, Image.Resampling.LANCZOS)
 
+    combined_overlay = create_combined_overlay(
+        thumbnail,
+        heatmap_img,
+        polygons,
+        slide_w,
+        slide_h,
+    )
+
     thumb_panel = add_title(thumbnail, "Thumbnail")
     polygon_panel = add_title(polygon_overlay, "Ground Truth Polygon Overlay")
     heatmap_panel = add_title(heatmap_img, "Heatmap Overlay")
+    combined_panel = add_title(combined_overlay, "Heatmap + Polygon Combined")
 
-    final_panel = make_panel([thumb_panel, polygon_panel, heatmap_panel], gap=30)
+    final_panel = make_panel(
+        [thumb_panel, polygon_panel, heatmap_panel, combined_panel],
+        gap=30
+    )
     final_panel.save(output_path)
 
     slide.close()
