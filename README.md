@@ -143,6 +143,14 @@ It currently reuses a trained model from our [Bone-Fracture-Detection](https://g
 
 ![Heatmap after TIAToolbox + PCam model](img/tumor_005_overlay_tiatoolbox_pcam.png)
 *After: TIAToolbox PCam pathology model, with activations more concentrated in tissue regions and fewer obvious non-tissue artifacts.*
+![WSI comparison panel](img/test_001_panel_v2.png)
+
+### Ground Truth vs Heatmap Comparison
+
+The figure below compares the original WSI thumbnail, CAMELYON ground-truth polygon annotations, the model-generated heatmap, and a combined overlay. This provides a qualitative view of how inferred high-activation regions relate to annotated tumor regions.
+![WSI comparison panel](img/test_001_panel_v2.png)
+The figure below compares with zoomed original WSI thumbnail, CAMELYON ground-truth polygon annotations, the model-generated heatmap, and a combined overlay. ( zoomed with largest polygon only)
+![WSI comparison panel](img/test_001_zoomed_panel.png)
 
 ## Use Cases
 
