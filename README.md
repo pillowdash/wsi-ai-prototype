@@ -227,3 +227,7 @@ curl -X POST "http://localhost:8000/predict" \
   "status": "completed in 12.4s"
 }
 ```
+
+## Roadmap
+
+Future work includes an experimental `feature/tumor-segmentation` branch that will extend the current heatmap localization pipeline into polygon-supervised tumor-region segmentation using CAMELYON XML annotations, U-Net / ResNet-UNet models, and Dice/IoU evaluation.
