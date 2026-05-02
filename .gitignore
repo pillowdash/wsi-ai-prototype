@@ -81,3 +81,12 @@ models/exported/
 build/
 dist/
 *.egg-info/
+
+# Segmentation generated data
+data/processed/segmentation/images/*
+data/processed/segmentation/masks/*
+data/processed/segmentation/predictions/*
+data/processed/segmentation/checkpoints/*
+!data/processed/segmentation/images/.gitkeep
+!data/processed/segmentation/masks/.gitkeep
+!data/processed/segmentation/manifests/.gitkeep
