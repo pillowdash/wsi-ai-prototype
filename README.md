@@ -228,6 +228,25 @@ curl -X POST "http://localhost:8000/predict" \
 }
 ```
 
+## Zero-Footprint WSI Viewer Demo
+
+This project includes a browser-based whole slide image viewer that streams WSI tiles on demand.
+
+The viewer uses:
+
+- FastAPI as the backend tile server
+- OpenSlide / DeepZoomGenerator for reading WSI files
+- OpenSeadragon for browser-based pan and zoom
+- Docker for local reproducible deployment
+
+The browser does not download the full `.tif` slide. Instead, it requests only the visible image tiles, similar to how Google Maps loads map tiles.
+
+### Run locally with Docker
+
+```bash
+docker build -t wsi-ai .
+```
+
 ## Roadmap
 
 Future work includes an experimental `feature/tumor-segmentation` branch that will extend the current heatmap localization pipeline into polygon-supervised tumor-region segmentation using CAMELYON XML annotations, U-Net / ResNet-UNet models, and Dice/IoU evaluation.

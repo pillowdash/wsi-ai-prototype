@@ -1,3 +1,7 @@
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from api.deepzoom import router as deepzoom_router
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pathlib import Path
@@ -6,6 +10,16 @@ import os
 import time
 
 app = FastAPI(title="WSI AI Inference API")
+
+
+app.include_router(deepzoom_router)
+
+app.mount("/viewer-assets", StaticFiles(directory="viewer"), name="viewer-assets")
+
+
+@app.get("/viewer", include_in_schema=False)
+def viewer():
+    return FileResponse("viewer/index.html")
 
 # Paths (container-friendly)
 DATA_DIR = Path("/app/data")

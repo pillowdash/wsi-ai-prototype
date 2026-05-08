@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZFP WSI Viewer</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/openseadragon@6.0.2/build/openseadragon/openseadragon.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 16px;
+      background: #1f1f1f;
+      border-bottom: 1px solid #333;
+    }
+
+    select, button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #222;
+      color: #eee;
+    }
+
+    #viewer {
+      width: 100vw;
+      height: calc(100vh - 48px);
+      background: #000;
+    }
+
+    #status {
+      margin-left: auto;
+      font-size: 13px;
+      color: #bbb;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <strong>ZFP WSI Viewer</strong>
+
+    <select id="slideSelect"></select>
+    <button id="loadButton">Load Slide</button>
+
+    <span id="status">Loading slides...</span>
+  </header>
+
+  <div id="viewer"></div>
+
+  <script>
+    let viewer = null;
+
+    const slideSelect = document.getElementById("slideSelect");
+    const loadButton = document.getElementById("loadButton");
+    const statusEl = document.getElementById("status");
+
+    async function loadSlideList() {
+      const response = await fetch("/slides");
+      const data = await response.json();
+
+      slideSelect.innerHTML = "";
+
+      for (const slide of data.slides) {
+        const option = document.createElement("option");
+        option.value = slide;
+        option.textContent = slide;
+        slideSelect.appendChild(option);
+      }
+
+      if (data.slides.length === 0) {
+        statusEl.textContent = "No slides found.";
+        return;
+      }
+
+      statusEl.textContent = `${data.slides.length} slide(s) found.`;
+      await openSlide(data.slides[0]);
+    }
+
+    async function openSlide(slideName) {
+      statusEl.textContent = `Opening ${slideName}...`;
+
+      const encodedSlide = encodeURIComponent(slideName);
+      const infoResponse = await fetch(`/slides/${encodedSlide}/info`);
+
+      if (!infoResponse.ok) {
+        statusEl.textContent = "Failed to load slide metadata.";
+        return;
+      }
+
+      const info = await infoResponse.json();
+
+      if (viewer) {
+        viewer.destroy();
+      }
+
+      viewer = OpenSeadragon({
+        id: "viewer",
+        prefixUrl: "https://cdn.jsdelivr.net/npm/openseadragon@6.0.2/build/openseadragon/images/",
+        showNavigator: true,
+        animationTime: 0.5,
+        blendTime: 0.1,
+        constrainDuringPan: true,
+        maxZoomPixelRatio: 2,
+        visibilityRatio: 0.8,
+
+        tileSources: {
+          width: info.width,
+          height: info.height,
+          tileSize: info.tile_size,
+          tileOverlap: info.tile_overlap,
+          minLevel: 0,
+          maxLevel: info.level_count - 1,
+
+          getTileUrl: function(level, x, y) {
+            return `/slides/${encodedSlide}/tiles/${level}/${x}_${y}.jpeg`;
+          }
+        }
+      });
+
+      statusEl.textContent =
+        `${slideName} | ${info.width} x ${info.height} | ${info.level_count} DZ levels`;
+    }
+
+    loadButton.addEventListener("click", async () => {
+      const slideName = slideSelect.value;
+      if (slideName) {
+        await openSlide(slideName);
+      }
+    });
+
+    loadSlideList().catch(error => {
+      console.error(error);
+      statusEl.textContent = "Viewer failed to initialize.";
+    });
+  </script>
+</body>
+</html>
