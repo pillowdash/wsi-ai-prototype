@@ -273,12 +273,12 @@ def _load_prediction_boxes_cached(
 @router.post("/{slide_name}/infer")
 def infer_slide(slide_name: str):
     """
-    Runs the AI pipeline for the selected slide.
+    Runs tile extraction and TIAToolbox inference for the selected slide.
 
-    For the interactive viewer, the most important output is:
+    Outputs:
       data/processed/predictions/{slide_stem}_predictions.csv
 
-    The live heatmap tile layer reads that CSV directly.
+    The AI heatmap overlay reads that prediction CSV.
     """
     slide_path = safe_slide_path(slide_name)
     stem = slide_stem(slide_name)
@@ -310,7 +310,15 @@ def infer_slide(slide_name: str):
         inference_output = run_script(
             [
                 "python",
-                "scripts/run_inference.py",
+                "scripts/run_inference_tiatoolbox.py",
+                "--slide-id",
+                stem,
+                "--model",
+                os.environ.get("TIATOOLBOX_MODEL", "resnet18-pcam"),
+                "--batch-size",
+                os.environ.get("TIATOOLBOX_BATCH_SIZE", "32"),
+                "--device",
+                os.environ.get("TIATOOLBOX_DEVICE", "cuda"),
             ],
             env_extra=env_extra,
         )
@@ -318,8 +326,6 @@ def infer_slide(slide_name: str):
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-    # Important: clear prediction cache so heatmap/info and heatmap tiles
-    # reload the newly generated prediction CSV.
     _load_prediction_boxes_cached.cache_clear()
 
     boxes = get_prediction_boxes(slide_name)
@@ -330,6 +336,8 @@ def infer_slide(slide_name: str):
     return {
         "slide_name": slide_name,
         "status": "completed",
+        "model": os.environ.get("TIATOOLBOX_MODEL", "resnet18-pcam"),
+        "device": os.environ.get("TIATOOLBOX_DEVICE", "cuda"),
         "elapsed_seconds": elapsed,
         "tiles_dir": str(tiles_dir),
         "prediction_csv": str(output_csv),
