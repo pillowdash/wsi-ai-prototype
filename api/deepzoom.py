@@ -1,3 +1,7 @@
+import subprocess
+import time
+import math
+
 import csv
 from PIL import Image, ImageDraw
 from functools import lru_cache
@@ -39,6 +43,30 @@ TILE_SIZE = 254
 TILE_OVERLAP = 1
 TILE_FORMAT = "jpeg"
 JPEG_QUALITY = 85
+
+PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", Path.cwd()))
+
+
+def run_script(cmd: list[str], env_extra: dict | None = None) -> str:
+    env = os.environ.copy()
+
+    if env_extra:
+        env.update(env_extra)
+
+    result = subprocess.run(
+        cmd,
+        cwd=PROJECT_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Command failed: {' '.join(cmd)}\n\nSTDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+        )
+
+    return result.stdout
 
 
 def safe_slide_path(slide_name: str) -> Path:
@@ -445,3 +473,79 @@ def get_tile(
             "Cache-Control": "public, max-age=86400",
         },
     )
+
+
+
+def distance_to_box(x: float, y: float, box: dict) -> float:
+    dx = max(box["x0"] - x, 0, x - box["x1"])
+    dy = max(box["y0"] - y, 0, y - box["y1"])
+
+    return math.sqrt(dx * dx + dy * dy)
+
+
+@router.get("/{slide_name}/prediction-at")
+def prediction_at(
+    slide_name: str,
+    x: float,
+    y: float,
+    radius: float = 4096.0,
+):
+    """
+    Returns the prediction box at or near a clicked WSI coordinate.
+
+    x/y are level-0 full-slide image coordinates.
+    """
+    boxes = get_prediction_boxes(slide_name)
+
+    if not boxes:
+        return {
+            "available": False,
+            "message": "No prediction CSV found for this slide.",
+            "x": x,
+            "y": y,
+        }
+
+    containing = [
+        box
+        for box in boxes
+        if box["x0"] <= x <= box["x1"] and box["y0"] <= y <= box["y1"]
+    ]
+
+    if containing:
+        selected = max(containing, key=lambda b: b["score"])
+        distance = 0.0
+        hit_type = "inside_prediction_tile"
+    else:
+        nearest = min(boxes, key=lambda b: distance_to_box(x, y, b))
+        distance = distance_to_box(x, y, nearest)
+
+        if distance > radius:
+            return {
+                "available": True,
+                "hit": False,
+                "message": "No nearby prediction tile found.",
+                "x": x,
+                "y": y,
+                "radius": radius,
+                "nearest_distance": distance,
+            }
+
+        selected = nearest
+        hit_type = "nearest_prediction_tile"
+
+    return {
+        "available": True,
+        "hit": True,
+        "hit_type": hit_type,
+        "x": x,
+        "y": y,
+        "distance": distance,
+        "tile_name": selected.get("tile_name"),
+        "score": selected["score"],
+        "box": {
+            "x0": selected["x0"],
+            "y0": selected["y0"],
+            "x1": selected["x1"],
+            "y1": selected["y1"],
+        },
+    }    

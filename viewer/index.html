@@ -43,6 +43,74 @@
       font-size: 13px;
       color: #bbb;
     }
+
+    .floating-panel {
+      position: absolute;
+      z-index: 20;
+      background: rgba(20, 20, 20, 0.88);
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    #legendPanel {
+      left: 16px;
+      bottom: 16px;
+      width: 220px;
+    }
+
+    #inspectorPanel {
+      right: 16px;
+      top: 64px;
+      width: 310px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .panel-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+    }
+
+    .legend-box {
+      display: inline-block;
+      width: 22px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid #666;
+    }
+
+    .legend-box.high {
+      background: rgba(255, 0, 0, 0.85);
+    }
+
+    .legend-box.medium {
+      background: rgba(255, 160, 0, 0.7);
+    }
+
+    .legend-box.low {
+      background: rgba(255, 255, 0, 0.35);
+    }
+
+    .prediction-score {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 8px 0;
+    }
+
+    .muted {
+      color: #aaa;
+    }
   </style>
 </head>
 
@@ -72,15 +140,50 @@
     <button id="loadButton">Load Slide</button>
 
     <span id="status">Loading slides...</span>
+
+    <button id="runInferenceButton">Run AI Inference</button>
+    
   </header>
 
   <div id="viewer"></div>
+  <div id="legendPanel" class="floating-panel">
+    <div class="panel-title">AI Heatmap Legend</div>
+
+    <div class="legend-row">
+      <span class="legend-box high"></span>
+      <span>High model confidence</span>
+    </div>
+
+    <div class="legend-row">
+      <span class="legend-box medium"></span>
+      <span>Medium confidence</span>
+    </div>
+
+    <div class="legend-row">
+      <span class="legend-box low"></span>
+      <span>Low / no activation</span>
+    </div>
+  </div>
+
+  <div id="inspectorPanel" class="floating-panel">
+    <div class="panel-title">Prediction Inspector</div>
+    <div id="inspectorContent">
+      Click a region on the slide to inspect the nearest AI prediction tile.
+    </div>
+  </div>
 
   <script>
     let viewer = null;
 
     let heatmapLayer = null;
     let currentSlideName = null;
+
+    let currentSlideName = null;
+    let currentSlideInfo = null;
+    let heatmapVersion = Date.now();
+
+    const runInferenceButton = document.getElementById("runInferenceButton");
+    const inspectorContent = document.getElementById("inspectorContent");
 
     const heatmapToggle = document.getElementById("heatmapToggle");
     const opacitySlider = document.getElementById("opacitySlider");
@@ -89,51 +192,148 @@
     const statusEl = document.getElementById("status");
 
     async function setupHeatmapLayer(slideName, info) {
-    const encodedSlide = encodeURIComponent(slideName);
+        const encodedSlide = encodeURIComponent(slideName);
 
-    const heatmapInfoResponse = await fetch(`/slides/${encodedSlide}/heatmap/info`);
-    const heatmapInfo = await heatmapInfoResponse.json();
+        const heatmapInfoResponse = await fetch(`/slides/${encodedSlide}/heatmap/info`);
+        const heatmapInfo = await heatmapInfoResponse.json();
 
-    if (!heatmapInfo.available) {
-      heatmapToggle.checked = false;
-      heatmapToggle.disabled = true;
-      opacitySlider.disabled = true;
-      heatmapLayer = null;
-      statusEl.textContent += " | No AI heatmap available";
-      return;
+        if (!heatmapInfo.available) {
+          heatmapToggle.checked = false;
+          heatmapToggle.disabled = true;
+          opacitySlider.disabled = true;
+          heatmapLayer = null;
+          statusEl.textContent += " | No AI heatmap available";
+          return;
+        }
+
+        heatmapToggle.disabled = false;
+        opacitySlider.disabled = false;
+
+        const heatmapTileSource = {
+          width: info.width,
+          height: info.height,
+          tileSize: info.tile_size,
+          tileOverlap: info.tile_overlap,
+          minLevel: 0,
+          maxLevel: info.level_count - 1,
+
+          getTileUrl: function(level, x, y) {
+	      return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png?v=${heatmapVersion}`;
+              //return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png`;
+          },
+
+          hasTransparency: function() {
+            return true;
+          }
+        };
+
+        viewer.addTiledImage({
+          tileSource: heatmapTileSource,
+          opacity: heatmapToggle.checked ? parseFloat(opacitySlider.value) : 0,
+          success: function(event) {
+            heatmapLayer = event.item;
+            heatmapLayer.setPreload(true);
+          }
+        });
+
+        statusEl.textContent += ` | AI boxes: ${heatmapInfo.box_count}`;
     }
 
-    heatmapToggle.disabled = false;
-    opacitySlider.disabled = false;
-
-    const heatmapTileSource = {
-      width: info.width,
-      height: info.height,
-      tileSize: info.tile_size,
-      tileOverlap: info.tile_overlap,
-      minLevel: 0,
-      maxLevel: info.level_count - 1,
-
-      getTileUrl: function(level, x, y) {
-        return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png`;
-      },
-
-      hasTransparency: function() {
-        return true;
+    function removeHeatmapLayer() {
+      if (viewer && heatmapLayer) {
+        viewer.world.removeItem(heatmapLayer);
+        heatmapLayer = null;
       }
-    };
-
-    viewer.addTiledImage({
-      tileSource: heatmapTileSource,
-      opacity: heatmapToggle.checked ? parseFloat(opacitySlider.value) : 0,
-      success: function(event) {
-        heatmapLayer = event.item;
-        heatmapLayer.setPreload(true);
-      }
-    });
-
-      statusEl.textContent += ` | AI boxes: ${heatmapInfo.box_count}`;
     }
+
+    async function inspectPredictionAtClick(event) {
+     if (!viewer || !currentSlideName) {
+       return;
+     }
+
+     try {
+       const baseImage = viewer.world.getItemAt(0);
+
+       if (!baseImage) {
+         return;
+       }
+
+       const viewportPoint = viewer.viewport.pointFromPixel(event.position);
+       const imagePoint = baseImage.viewportToImageCoordinates(viewportPoint);
+
+       const x = Math.round(imagePoint.x);
+       const y = Math.round(imagePoint.y);
+
+       inspectorContent.innerHTML = `
+         <div class="muted">Clicked WSI coordinate:</div>
+         <div>x=${x}, y=${y}</div>
+         <br />
+         <div class="muted">Loading prediction...</div>
+       `;
+
+       const encodedSlide = encodeURIComponent(currentSlideName);
+       const response = await fetch(
+         `/slides/${encodedSlide}/prediction-at?x=${x}&y=${y}`
+       );
+
+       const data = await response.json();
+
+       if (!data.available) {
+         inspectorContent.innerHTML = `
+           <div class="muted">Clicked WSI coordinate:</div>
+           <div>x=${x}, y=${y}</div>
+           <br />
+           <strong>No prediction data available.</strong>
+           <div class="muted">${data.message || ""}</div>
+         `;
+         return;
+       }
+
+       if (!data.hit) {
+         inspectorContent.innerHTML = `
+           <div class="muted">Clicked WSI coordinate:</div>
+           <div>x=${x}, y=${y}</div>
+           <br />
+           <strong>No nearby AI tile found.</strong>
+           <div class="muted">Nearest distance: ${Math.round(data.nearest_distance)} px</div>
+         `;
+         return;
+       }
+
+       const scorePercent = Math.round(data.score * 1000) / 10;
+
+       inspectorContent.innerHTML = `
+         <div class="muted">Clicked WSI coordinate:</div>
+         <div>x=${x}, y=${y}</div>
+
+         <div class="prediction-score">${scorePercent}%</div>
+
+         <div><strong>AI confidence</strong></div>
+         <div class="muted">${data.hit_type}</div>
+
+         <hr />
+
+         <div><strong>Tile</strong></div>
+         <div>${data.tile_name || "N/A"}</div>
+
+         <br />
+
+         <div><strong>Prediction box</strong></div>
+         <div class="muted">
+           x0=${Math.round(data.box.x0)},
+           y0=${Math.round(data.box.y0)}<br />
+           x1=${Math.round(data.box.x1)},
+           y1=${Math.round(data.box.y1)}
+         </div>
+       `;
+     } catch (error) {
+       console.error(error);
+       inspectorContent.innerHTML = `
+         <strong>Prediction lookup failed.</strong>
+         <div class="muted">${error.message}</div>
+       `;
+     }
+   }
 
     async function loadSlideList() {
       const response = await fetch("/slides");
@@ -167,6 +367,10 @@
         statusEl.textContent = "Failed to load slide metadata.";
         return;
       }
+	    
+      currentSlideName = slideName;
+      currentSlideInfo = info;
+      heatmapVersion = Date.now();
 
       const info = await infoResponse.json();
 
@@ -198,7 +402,12 @@
         }
       });
 
+      //??
       currentSlideName = slideName;
+
+      viewer.addHandler("canvas-click", async function(event) {
+        await inspectPredictionAtClick(event);
+      });	    
 
       viewer.addHandler("open", async function() {
         await setupHeatmapLayer(slideName, info);
@@ -237,6 +446,86 @@
 
       heatmapLayer.setOpacity(parseFloat(opacitySlider.value));
     });    
+
+
+    runInferenceButton.addEventListener("click", async () => {
+      if (!currentSlideName || !currentSlideInfo) {
+        return;
+      }
+
+      const encodedSlide = encodeURIComponent(currentSlideName);
+
+      runInferenceButton.disabled = true;
+      heatmapToggle.disabled = true;
+      opacitySlider.disabled = true;
+
+      const originalText = runInferenceButton.textContent;
+      runInferenceButton.textContent = "Running...";
+      statusEl.textContent = `Running AI inference for ${currentSlideName}...`;
+
+      inspectorContent.innerHTML = `
+        <strong>AI inference is running...</strong>
+        <div class="muted">
+          This may take a while depending on tile count, model, CPU/GPU, and slide size.
+        </div>
+      `;
+
+      try {
+        const response = await fetch(`/slides/${encodedSlide}/infer`, {
+          method: "POST",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Inference failed.");
+        }
+
+        heatmapVersion = Date.now();
+
+        removeHeatmapLayer();
+
+        heatmapToggle.checked = true;
+        heatmapToggle.disabled = false;
+        opacitySlider.disabled = false;
+
+        await setupHeatmapLayer(currentSlideName, currentSlideInfo);
+
+        if (heatmapLayer) {
+          heatmapLayer.setOpacity(parseFloat(opacitySlider.value));
+        }
+
+        statusEl.textContent =
+          `${currentSlideName} | AI inference complete | boxes: ${data.box_count}`;
+
+        inspectorContent.innerHTML = `
+          <strong>AI inference completed.</strong>
+          <br /><br />
+          <div><strong>Slide</strong>: ${data.slide_name}</div>
+          <div><strong>Prediction boxes</strong>: ${data.box_count}</div>
+          <div><strong>Elapsed</strong>: ${data.elapsed_seconds}s</div>
+          <div><strong>Score max</strong>: ${data.score_max}</div>
+          <br />
+          <div class="muted">
+            Turn on the heatmap and click suspicious regions to inspect tile-level scores.
+          </div>
+        `;
+      } catch (error) {
+        console.error(error);
+
+        statusEl.textContent = "AI inference failed.";
+
+        inspectorContent.innerHTML = `
+          <strong>AI inference failed.</strong>
+          <br /><br />
+          <div class="muted">${error.message}</div>
+        `;
+      } finally {
+        runInferenceButton.disabled = false;
+        runInferenceButton.textContent = originalText;
+      }
+    });
+
   </script>
 </body>
 </html>
