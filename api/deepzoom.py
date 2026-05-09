@@ -268,6 +268,78 @@ def _load_prediction_boxes_cached(
     return boxes
 
 
+
+
+@router.post("/{slide_name}/infer")
+def infer_slide(slide_name: str):
+    """
+    Runs the AI pipeline for the selected slide.
+
+    For the interactive viewer, the most important output is:
+      data/processed/predictions/{slide_stem}_predictions.csv
+
+    The live heatmap tile layer reads that CSV directly.
+    """
+    slide_path = safe_slide_path(slide_name)
+    stem = slide_stem(slide_name)
+
+    tiles_dir = DATA_ROOT / "processed/tiles" / stem
+    output_csv = PREDICTION_DIR / f"{stem}_predictions.csv"
+
+    start_time = time.time()
+
+    env_extra = {
+        "SLIDE_ID": stem,
+        "TILES_DIR": str(tiles_dir),
+        "OUTPUT_DIR": str(PREDICTION_DIR),
+        "OUTPUT_CSV": str(output_csv),
+        "SLIDE_PATH": str(slide_path),
+    }
+
+    try:
+        extract_output = run_script(
+            [
+                "python",
+                "scripts/extract_tiles.py",
+                "--slide",
+                str(slide_path),
+            ],
+            env_extra=env_extra,
+        )
+
+        inference_output = run_script(
+            [
+                "python",
+                "scripts/run_inference.py",
+            ],
+            env_extra=env_extra,
+        )
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    # Important: clear prediction cache so heatmap/info and heatmap tiles
+    # reload the newly generated prediction CSV.
+    _load_prediction_boxes_cached.cache_clear()
+
+    boxes = get_prediction_boxes(slide_name)
+    scores = [box["score"] for box in boxes]
+
+    elapsed = round(time.time() - start_time, 2)
+
+    return {
+        "slide_name": slide_name,
+        "status": "completed",
+        "elapsed_seconds": elapsed,
+        "tiles_dir": str(tiles_dir),
+        "prediction_csv": str(output_csv),
+        "box_count": len(boxes),
+        "score_min": min(scores) if scores else None,
+        "score_max": max(scores) if scores else None,
+        "extract_log_tail": extract_output[-1200:],
+        "inference_log_tail": inference_output[-1200:],
+    }
+
 @router.get("/{slide_name}/heatmap/info")
 def heatmap_info(slide_name: str):
     pred_path = prediction_csv_path(slide_name)
