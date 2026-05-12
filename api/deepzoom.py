@@ -532,6 +532,17 @@ def get_tile(
     if x < 0 or y < 0 or x >= tiles_x or y >= tiles_y:
         raise HTTPException(status_code=404, detail="Tile out of range")
 
+
+    # This shows the actual translation.
+    location, slide_level, region_size = generator.get_tile_coordinates(level, (x, y))
+
+    print(
+        f"Deep Zoom request: level={level}, tile=({x}, {y}) | "
+        f"OpenSlide read_region: location={location}, "
+        f"slide_level={slide_level}, region_size={region_size}"
+    )
+
+
     try:
         tile = generator.get_tile(level, (x, y)).convert("RGB")
     except Exception as exc:

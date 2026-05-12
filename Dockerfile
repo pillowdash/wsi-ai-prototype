@@ -10,6 +10,11 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     libopenslide0 \
     openslide-tools \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 

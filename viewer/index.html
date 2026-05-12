@@ -2,46 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ZFP WSI Viewer</title>
 
   <script src="https://cdn.jsdelivr.net/npm/openseadragon@6.0.2/build/openseadragon/openseadragon.min.js"></script>
 
   <style>
+    html,
     body {
       margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       font-family: Arial, sans-serif;
       background: #111;
       color: #eee;
     }
 
-    header {
-      height: 48px;
+    body {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 16px;
-      background: #1f1f1f;
-      border-bottom: 1px solid #333;
+      flex-direction: column;
     }
 
-    select, button {
-      padding: 6px 10px;
+    header {
+      position: relative;
+      z-index: 100;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #1f1f1f;
+      border-bottom: 1px solid #333;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+    }
+
+    .app-title {
+      font-weight: bold;
+      font-size: 18px;
+      white-space: nowrap;
+    }
+
+    select,
+    button,
+    input[type="range"] {
+      max-width: 100%;
+    }
+
+    select,
+    button {
+      padding: 7px 10px;
       border-radius: 6px;
       border: 1px solid #555;
       background: #222;
       color: #eee;
+      font-size: 14px;
     }
 
-    #viewer {
-      width: 100vw;
-      height: calc(100vh - 48px);
-      background: #000;
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled,
+    input:disabled,
+    select:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    #slideSelect {
+      min-width: 220px;
+      flex: 0 1 260px;
+    }
+
+    #opacitySlider {
+      width: 120px;
     }
 
     #status {
-      margin-left: auto;
+      flex: 1 1 240px;
+      min-width: 160px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
       font-size: 13px;
       color: #bbb;
+    }
+
+    #viewer {
+      flex: 1 1 auto;
+      width: 100vw;
+      min-height: 0;
+      background: #000;
     }
 
     .floating-panel {
@@ -54,25 +115,47 @@
       padding: 12px;
       font-size: 13px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+      box-sizing: border-box;
+      touch-action: manipulation;
     }
 
-    #legendPanel {
-      left: 16px;
-      bottom: 16px;
-      width: 220px;
-    }
-
-    #inspectorPanel {
-      right: 16px;
-      top: 64px;
-      width: 310px;
-      max-height: 360px;
-      overflow: auto;
+    .panel-hidden {
+      display: none !important;
     }
 
     .panel-title {
       font-weight: bold;
       margin-bottom: 8px;
+    }
+
+    .panel-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-close {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 18px;
+      line-height: 1;
+      min-width: 32px;
+    }
+
+    #legendPanel {
+      left: 16px;
+      bottom: 16px;
+      width: 230px;
+    }
+
+    #inspectorPanel {
+      right: 16px;
+      top: 64px;
+      width: 330px;
+      max-height: 360px;
+      overflow: auto;
+      z-index: 80;
     }
 
     .legend-row {
@@ -88,6 +171,7 @@
       height: 12px;
       border-radius: 3px;
       border: 1px solid #666;
+      flex: 0 0 auto;
     }
 
     .legend-box.high {
@@ -111,52 +195,128 @@
     .muted {
       color: #aaa;
     }
+
+    hr {
+      border: none;
+      border-top: 1px solid #444;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .app-title {
+        width: 100%;
+        font-size: 16px;
+      }
+
+      #slideSelect {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+      }
+
+      #loadButton,
+      #runInferenceButton {
+        flex: 1 1 calc(50% - 8px);
+      }
+
+      label {
+        flex: 1 1 calc(50% - 8px);
+        font-size: 13px;
+      }
+
+      #opacitySlider {
+        width: 100%;
+      }
+
+      #status {
+        order: 99;
+        flex: 1 1 100%;
+        font-size: 12px;
+      }
+
+      #inspectorPanel {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        top: auto;
+        width: auto;
+        max-height: 30dvh;
+        overflow: auto;
+        z-index: 90;
+        font-size: 12px;
+      }
+
+      #legendPanel {
+        position: fixed;
+        left: 8px;
+        bottom: 8px;
+        width: 220px;
+        max-width: calc(100vw - 16px);
+        z-index: 60;
+        font-size: 12px;
+      }
+
+      body.inspector-open #legendPanel {
+        bottom: calc(30dvh + 20px);
+        opacity: 0.9;
+      }
+
+      .prediction-score {
+        font-size: 20px;
+      }
+    }
   </style>
 </head>
 
 <body>
   <header>
-    <strong>ZFP WSI Viewer</strong>
+    <strong class="app-title">ZFP WSI Viewer</strong>
 
     <select id="slideSelect"></select>
 
+    <button id="loadButton">Load Slide</button>
+
     <label>
-	  <input type="checkbox" id="heatmapToggle" />
-	  AI Heatmap
+      <input type="checkbox" id="heatmapToggle" />
+      AI Heatmap
     </label>
 
     <label>
-	  Opacity
-	  <input
-	    type="range"
-	    id="opacitySlider"
-	    min="0"
-	    max="1"
-	    step="0.05"
-	    value="0.45"
-	  />
-     </label>
-
-    <button id="loadButton">Load Slide</button>
-
-    <span id="status">Loading slides...</span>
+      Opacity
+      <input
+        type="range"
+        id="opacitySlider"
+        min="0"
+        max="1"
+        step="0.05"
+        value="0.45"
+      />
+    </label>
 
     <button id="runInferenceButton">Run AI Inference</button>
-    
+
+    <span id="status">Loading slides...</span>
   </header>
 
   <div id="viewer"></div>
+
   <div id="legendPanel" class="floating-panel">
     <div class="panel-title">AI Heatmap Legend</div>
 
     <div class="legend-row">
       <span class="legend-box high"></span>
-      <span>High model confidence</span>
+      <span>High class-1 probability</span>
     </div>
 
     <div class="legend-row">
       <span class="legend-box medium"></span>
-      <span>Medium confidence</span>
+      <span>Medium probability</span>
     </div>
 
     <div class="legend-row">
@@ -165,8 +325,12 @@
     </div>
   </div>
 
-  <div id="inspectorPanel" class="floating-panel">
-    <div class="panel-title">Prediction Inspector</div>
+  <div id="inspectorPanel" class="floating-panel panel-hidden">
+    <div class="panel-title panel-title-row">
+      <span>Prediction Inspector</span>
+      <button id="closeInspectorButton" class="panel-close" type="button">×</button>
+    </div>
+
     <div id="inspectorContent">
       Click a region on the slide to inspect the nearest AI prediction tile.
     </div>
@@ -174,16 +338,15 @@
 
   <script>
     let viewer = null;
-
     let heatmapLayer = null;
-    let currentSlideName = null;
-
     let currentSlideName = null;
     let currentSlideInfo = null;
     let heatmapVersion = Date.now();
 
     const runInferenceButton = document.getElementById("runInferenceButton");
     const inspectorContent = document.getElementById("inspectorContent");
+    const inspectorPanel = document.getElementById("inspectorPanel");
+    const closeInspectorButton = document.getElementById("closeInspectorButton");
 
     const heatmapToggle = document.getElementById("heatmapToggle");
     const opacitySlider = document.getElementById("opacitySlider");
@@ -191,53 +354,34 @@
     const loadButton = document.getElementById("loadButton");
     const statusEl = document.getElementById("status");
 
-    async function setupHeatmapLayer(slideName, info) {
-        const encodedSlide = encodeURIComponent(slideName);
-
-        const heatmapInfoResponse = await fetch(`/slides/${encodedSlide}/heatmap/info`);
-        const heatmapInfo = await heatmapInfoResponse.json();
-
-        if (!heatmapInfo.available) {
-          heatmapToggle.checked = false;
-          heatmapToggle.disabled = true;
-          opacitySlider.disabled = true;
-          heatmapLayer = null;
-          statusEl.textContent += " | No AI heatmap available";
-          return;
-        }
-
-        heatmapToggle.disabled = false;
-        opacitySlider.disabled = false;
-
-        const heatmapTileSource = {
-          width: info.width,
-          height: info.height,
-          tileSize: info.tile_size,
-          tileOverlap: info.tile_overlap,
-          minLevel: 0,
-          maxLevel: info.level_count - 1,
-
-          getTileUrl: function(level, x, y) {
-	      return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png?v=${heatmapVersion}`;
-              //return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png`;
-          },
-
-          hasTransparency: function() {
-            return true;
-          }
-        };
-
-        viewer.addTiledImage({
-          tileSource: heatmapTileSource,
-          opacity: heatmapToggle.checked ? parseFloat(opacitySlider.value) : 0,
-          success: function(event) {
-            heatmapLayer = event.item;
-            heatmapLayer.setPreload(true);
-          }
-        });
-
-        statusEl.textContent += ` | AI boxes: ${heatmapInfo.box_count}`;
+    function showInspector() {
+      inspectorPanel.classList.remove("panel-hidden");
+      document.body.classList.add("inspector-open");
     }
+
+    function hideInspector() {
+      inspectorPanel.classList.add("panel-hidden");
+      document.body.classList.remove("inspector-open");
+    }
+
+    function closeInspector(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      hideInspector();
+    }
+
+    closeInspectorButton.addEventListener("pointerdown", closeInspector);
+    closeInspectorButton.addEventListener("click", closeInspector);
+
+    document.querySelectorAll("header, .floating-panel").forEach((element) => {
+      element.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+      });
+
+      element.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+    });
 
     function removeHeatmapLayer() {
       if (viewer && heatmapLayer) {
@@ -246,94 +390,146 @@
       }
     }
 
+    async function setupHeatmapLayer(slideName, info) {
+      const encodedSlide = encodeURIComponent(slideName);
+
+      const heatmapInfoResponse = await fetch(`/slides/${encodedSlide}/heatmap/info`);
+      const heatmapInfo = await heatmapInfoResponse.json();
+
+      if (!heatmapInfo.available) {
+        heatmapToggle.checked = false;
+        heatmapToggle.disabled = true;
+        opacitySlider.disabled = true;
+        heatmapLayer = null;
+        statusEl.textContent += " | No AI heatmap available";
+        return;
+      }
+
+      heatmapToggle.disabled = false;
+      opacitySlider.disabled = false;
+
+      const heatmapTileSource = {
+        width: info.width,
+        height: info.height,
+        tileSize: info.tile_size,
+        tileOverlap: info.tile_overlap,
+        minLevel: 0,
+        maxLevel: info.level_count - 1,
+
+        getTileUrl: function(level, x, y) {
+          return `/slides/${encodedSlide}/heatmap-tiles/${level}/${x}_${y}.png?v=${heatmapVersion}`;
+        },
+
+        hasTransparency: function() {
+          return true;
+        }
+      };
+
+      viewer.addTiledImage({
+        tileSource: heatmapTileSource,
+        opacity: heatmapToggle.checked ? parseFloat(opacitySlider.value) : 0,
+        success: function(event) {
+          heatmapLayer = event.item;
+          heatmapLayer.setPreload(true);
+        }
+      });
+
+      statusEl.textContent += ` | AI boxes: ${heatmapInfo.box_count}`;
+    }
+
     async function inspectPredictionAtClick(event) {
-     if (!viewer || !currentSlideName) {
-       return;
-     }
+      if (!viewer || !currentSlideName) {
+        return;
+      }
 
-     try {
-       const baseImage = viewer.world.getItemAt(0);
+      try {
+        showInspector();
 
-       if (!baseImage) {
-         return;
-       }
+        const baseImage = viewer.world.getItemAt(0);
 
-       const viewportPoint = viewer.viewport.pointFromPixel(event.position);
-       const imagePoint = baseImage.viewportToImageCoordinates(viewportPoint);
+        if (!baseImage) {
+          return;
+        }
 
-       const x = Math.round(imagePoint.x);
-       const y = Math.round(imagePoint.y);
+        const viewportPoint = viewer.viewport.pointFromPixel(event.position);
+        const imagePoint = baseImage.viewportToImageCoordinates(viewportPoint);
 
-       inspectorContent.innerHTML = `
-         <div class="muted">Clicked WSI coordinate:</div>
-         <div>x=${x}, y=${y}</div>
-         <br />
-         <div class="muted">Loading prediction...</div>
-       `;
+        const x = Math.round(imagePoint.x);
+        const y = Math.round(imagePoint.y);
 
-       const encodedSlide = encodeURIComponent(currentSlideName);
-       const response = await fetch(
-         `/slides/${encodedSlide}/prediction-at?x=${x}&y=${y}`
-       );
+        inspectorContent.innerHTML = `
+          <div class="muted">Clicked WSI coordinate:</div>
+          <div>x=${x}, y=${y}</div>
+          <br />
+          <div class="muted">Loading prediction...</div>
+        `;
 
-       const data = await response.json();
+        const encodedSlide = encodeURIComponent(currentSlideName);
+        const response = await fetch(
+          `/slides/${encodedSlide}/prediction-at?x=${x}&y=${y}`
+        );
 
-       if (!data.available) {
-         inspectorContent.innerHTML = `
-           <div class="muted">Clicked WSI coordinate:</div>
-           <div>x=${x}, y=${y}</div>
-           <br />
-           <strong>No prediction data available.</strong>
-           <div class="muted">${data.message || ""}</div>
-         `;
-         return;
-       }
+        const data = await response.json();
 
-       if (!data.hit) {
-         inspectorContent.innerHTML = `
-           <div class="muted">Clicked WSI coordinate:</div>
-           <div>x=${x}, y=${y}</div>
-           <br />
-           <strong>No nearby AI tile found.</strong>
-           <div class="muted">Nearest distance: ${Math.round(data.nearest_distance)} px</div>
-         `;
-         return;
-       }
+        if (!data.available) {
+          inspectorContent.innerHTML = `
+            <div class="muted">Clicked WSI coordinate:</div>
+            <div>x=${x}, y=${y}</div>
+            <br />
+            <strong>No prediction data available.</strong>
+            <div class="muted">${data.message || ""}</div>
+          `;
+          return;
+        }
 
-       const scorePercent = Math.round(data.score * 1000) / 10;
+        if (!data.hit) {
+          inspectorContent.innerHTML = `
+            <div class="muted">Clicked WSI coordinate:</div>
+            <div>x=${x}, y=${y}</div>
+            <br />
+            <strong>No nearby AI tile found.</strong>
+            <div class="muted">Nearest distance: ${Math.round(data.nearest_distance)} px</div>
+          `;
+          return;
+        }
 
-       inspectorContent.innerHTML = `
-         <div class="muted">Clicked WSI coordinate:</div>
-         <div>x=${x}, y=${y}</div>
+        const scorePercent = Math.round(data.score * 1000) / 10;
 
-         <div class="prediction-score">${scorePercent}%</div>
+        inspectorContent.innerHTML = `
+          <div class="muted">Clicked WSI coordinate:</div>
+          <div>x=${x}, y=${y}</div>
 
-         <div><strong>AI confidence</strong></div>
-         <div class="muted">${data.hit_type}</div>
+          <div class="prediction-score">${scorePercent}%</div>
 
-         <hr />
+          <div><strong>Class-1 probability</strong></div>
+          <div class="muted">${data.hit_type}</div>
 
-         <div><strong>Tile</strong></div>
-         <div>${data.tile_name || "N/A"}</div>
+          <hr />
 
-         <br />
+          <div><strong>Tile</strong></div>
+          <div>${data.tile_name || "N/A"}</div>
 
-         <div><strong>Prediction box</strong></div>
-         <div class="muted">
-           x0=${Math.round(data.box.x0)},
-           y0=${Math.round(data.box.y0)}<br />
-           x1=${Math.round(data.box.x1)},
-           y1=${Math.round(data.box.y1)}
-         </div>
-       `;
-     } catch (error) {
-       console.error(error);
-       inspectorContent.innerHTML = `
-         <strong>Prediction lookup failed.</strong>
-         <div class="muted">${error.message}</div>
-       `;
-     }
-   }
+          <br />
+
+          <div><strong>Prediction box</strong></div>
+          <div class="muted">
+            x0=${Math.round(data.box.x0)},
+            y0=${Math.round(data.box.y0)}<br />
+            x1=${Math.round(data.box.x1)},
+            y1=${Math.round(data.box.y1)}
+          </div>
+        `;
+      } catch (error) {
+        console.error(error);
+
+        showInspector();
+
+        inspectorContent.innerHTML = `
+          <strong>Prediction lookup failed.</strong>
+          <div class="muted">${error.message}</div>
+        `;
+      }
+    }
 
     async function loadSlideList() {
       const response = await fetch("/slides");
@@ -367,12 +563,15 @@
         statusEl.textContent = "Failed to load slide metadata.";
         return;
       }
-	    
+
+      const info = await infoResponse.json();
+
       currentSlideName = slideName;
       currentSlideInfo = info;
       heatmapVersion = Date.now();
+      heatmapLayer = null;
 
-      const info = await infoResponse.json();
+      hideInspector();
 
       if (viewer) {
         viewer.destroy();
@@ -387,6 +586,8 @@
         constrainDuringPan: true,
         maxZoomPixelRatio: 2,
         visibilityRatio: 0.8,
+        immediateRender: false,
+        blendTime: 0,
 
         tileSources: {
           width: info.width,
@@ -402,12 +603,9 @@
         }
       });
 
-      //??
-      currentSlideName = slideName;
-
       viewer.addHandler("canvas-click", async function(event) {
         await inspectPredictionAtClick(event);
-      });	    
+      });
 
       viewer.addHandler("open", async function() {
         await setupHeatmapLayer(slideName, info);
@@ -419,16 +617,12 @@
 
     loadButton.addEventListener("click", async () => {
       const slideName = slideSelect.value;
+
       if (slideName) {
         await openSlide(slideName);
       }
     });
 
-    loadSlideList().catch(error => {
-      console.error(error);
-      statusEl.textContent = "Viewer failed to initialize.";
-    });
-    
     heatmapToggle.addEventListener("change", () => {
       if (!heatmapLayer) {
         return;
@@ -445,13 +639,14 @@
       }
 
       heatmapLayer.setOpacity(parseFloat(opacitySlider.value));
-    });    
-
+    });
 
     runInferenceButton.addEventListener("click", async () => {
       if (!currentSlideName || !currentSlideInfo) {
         return;
       }
+
+      showInspector();
 
       const encodedSlide = encodeURIComponent(currentSlideName);
 
@@ -491,10 +686,6 @@
 
         await setupHeatmapLayer(currentSlideName, currentSlideInfo);
 
-        if (heatmapLayer) {
-          heatmapLayer.setOpacity(parseFloat(opacitySlider.value));
-        }
-
         statusEl.textContent =
           `${currentSlideName} | AI inference complete | boxes: ${data.box_count}`;
 
@@ -526,6 +717,10 @@
       }
     });
 
+    loadSlideList().catch(error => {
+      console.error(error);
+      statusEl.textContent = "Viewer failed to initialize.";
+    });
   </script>
 </body>
 </html>
