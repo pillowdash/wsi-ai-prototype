@@ -21,6 +21,15 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
+
+# only install it when you want test/report automation
+#COPY requirements-dev.txt .
+#RUN pip install --no-cache-dir -r requirements-dev.txt
+#RUN python -m playwright install --with-deps chromium
+
+
+
 # Reinstall CUDA-enabled PyTorch explicitly
 RUN pip install --no-cache-dir \
     torch torchvision torchaudio \

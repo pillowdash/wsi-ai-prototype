@@ -1,0 +1,17 @@
+openslide-python
+numpy
+pillow
+matplotlib
+pandas
+opencv-python
+pyyaml
+tqdm
+scikit-image
+scipy
+fastapi
+uvicorn
+tiatoolbox
+playwright
+pytest
+pytest-playwright
+
