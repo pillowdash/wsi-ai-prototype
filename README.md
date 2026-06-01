@@ -290,6 +290,12 @@ docker run --rm \
   --name wsi-ai-viewer \
   wsi-ai
 ```
+Before running the Playwright E2E tests, make sure the Python virtual environment is activated:
+(
+One small note: `source .venv/bin/activate` is mainly needed for running `pytest`. The Docker command itself does not require the venv, but putting it before the whole test workflow is fine and avoids the `pytest: command not found` issue.)
+```bash
+source .venv/bin/activate
+```
 
 Then run the Playwright E2E tests:
 
