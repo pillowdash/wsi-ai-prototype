@@ -81,3 +81,14 @@ models/exported/
 build/
 dist/
 *.egg-info/
+
+# Generated Playwright outputs
+outputs/
+
+# Playwright / pytest artifacts
+test-results/
+playwright-report/
+.pytest_cache/
+
+# Browser cache if ever created inside repo
+.ms-playwright/

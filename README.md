@@ -8,6 +8,7 @@ This project combines FastAPI, OpenSlide, OpenSeadragon, and TIAToolbox to suppo
 - tile-based inference
 - AI heatmap overlays
 - click-to-inspect prediction results
+- Playwright-based viewer testing and screenshot automation
 
 This project is intended for research, learning, and portfolio demonstration. It is not clinically validated.
 
@@ -23,6 +24,8 @@ This project is intended for research, learning, and portfolio demonstration. It
 - Adjust heatmap opacity
 - Click a region to inspect tile-level prediction details
 - Use the viewer from a desktop or mobile browser
+- Playwright E2E tests for viewer interactions
+- Automated screenshot and PDF snapshot generation
 - Docker support for local reproducible runs
 
 ---
@@ -40,7 +43,11 @@ wsi-ai-prototype/
 │   ├── extract_tiles.py
 │   ├── run_inference_tiatoolbox.py
 │   ├── generate_heatmap.py
+│   ├── playwright_capture_viewer.py
 │   └── download_dataset.sh
+├── tests_e2e/
+│   ├── conftest.py
+│   └── test_viewer_heatmap.py
 ├── src/
 ├── data/
 ├── img/
@@ -241,6 +248,153 @@ data/processed/heatmaps/tumor_005_overlay.png
 
 ---
 
+## Playwright Browser Automation
+
+This project includes Playwright automation for browser-based testing, screenshots, and PDF snapshot reports.
+
+Playwright is used for:
+
+- E2E tests for the OpenSeadragon viewer
+- automated viewer screenshots
+- PDF snapshot report generation
+- desktop and mobile layout checks
+
+### Install Playwright Locally
+
+```bash
+pip install playwright pytest-playwright
+playwright install chromium
+```
+
+On Linux, install browser system dependencies if needed:
+
+```bash
+playwright install-deps chromium
+```
+
+### Run E2E Tests
+
+Start the viewer first:
+
+```bash
+docker rm -f wsi-ai-viewer 2>/dev/null || true
+
+docker run --rm \
+  --gpus all \
+  -p 8000:8000 \
+  -v "$(pwd)/data:/app/data" \
+  -e SLIDE_ROOT=/app/data/raw/camelyon16/images \
+  -e TIATOOLBOX_MODEL=resnet18-pcam \
+  -e TIATOOLBOX_BATCH_SIZE=32 \
+  -e TIATOOLBOX_DEVICE=cuda \
+  --name wsi-ai-viewer \
+  wsi-ai
+```
+
+Then run the Playwright E2E tests:
+
+```bash
+pytest tests_e2e/ --wsi-slide tumor_005.tif
+```
+
+Run with the browser visible:
+
+```bash
+pytest tests_e2e/ --wsi-slide tumor_005.tif --headed
+```
+
+Run against a custom viewer URL:
+
+```bash
+pytest tests_e2e/ \
+  --wsi-viewer-url http://localhost:8000/viewer \
+  --wsi-slide tumor_005.tif \
+  --headed
+```
+
+The E2E tests validate:
+
+- slide dropdown loading
+- OpenSeadragon viewer startup
+- WSI tile streaming
+- AI heatmap tile requests
+- heatmap opacity control
+- prediction inspector behavior
+
+### Capture Viewer Screenshot
+
+The standalone capture script can generate reproducible screenshots from the browser viewer:
+
+```bash
+python scripts/playwright_capture_viewer.py \
+  --slide tumor_005.tif \
+  --heatmap \
+  --opacity 0.45 \
+  --inspect-center \
+  --screenshot outputs/viewer_snapshots/tumor_005_heatmap.png
+```
+### Playwright Screenshot Example
+
+The screenshot below was generated automatically with Playwright after loading the WSI viewer, enabling the AI heatmap overlay, setting opacity, and opening the prediction inspector.
+
+![Playwright-generated WSI heatmap screenshot](img/playwright/tumor_005_heatmap.png)
+
+Run with the browser visible:
+
+```bash
+python scripts/playwright_capture_viewer.py \
+  --slide tumor_005.tif \
+  --heatmap \
+  --opacity 0.45 \
+  --inspect-center \
+  --screenshot outputs/viewer_snapshots/tumor_005_heatmap.png \
+  --headed
+```
+
+### Generate PDF Snapshot Report
+
+```bash
+python scripts/playwright_capture_viewer.py \
+  --slide tumor_005.tif \
+  --heatmap \
+  --opacity 0.45 \
+  --inspect-center \
+  --screenshot outputs/viewer_snapshots/tumor_005_heatmap.png \
+  --pdf outputs/reports/tumor_005_viewer_report.pdf \
+  --report-title "Tumor 005 - AI WSI Viewer Snapshot"
+```
+
+Typical outputs:
+
+```text
+outputs/viewer_snapshots/tumor_005_heatmap.png
+outputs/reports/tumor_005_viewer_report.pdf
+```
+
+### Mobile Screenshot Test
+
+```bash
+python scripts/playwright_capture_viewer.py \
+  --slide tumor_005.tif \
+  --heatmap \
+  --width 390 \
+  --height 844 \
+  --device-scale-factor 3 \
+  --screenshot outputs/viewer_snapshots/mobile_tumor_005.png
+```
+
+### Notes
+
+The Playwright tests wait for OpenSeadragon tile requests to settle before checking the UI. This is important because WSI tiles and AI heatmap tiles continue loading after the initial page load.
+
+For Docker-based Playwright usage, install Chromium and browser dependencies in the Dockerfile with:
+
+```dockerfile
+RUN python -m playwright install --with-deps chromium
+```
+
+---
+
 ## Example Results
 
 ### Model Upgrade
@@ -367,6 +521,30 @@ You can also check:
 ```bash
 curl http://localhost:8000/slides/{slide_name}/heatmap/info
 ```
+
+### Playwright browser executable missing
+
+If Playwright fails with an error saying the browser executable does not exist, install Chromium:
+
+```bash
+playwright install chromium
+```
+
+### Playwright option conflict
+
+If pytest reports an option conflict such as:
+
+```text
+ValueError: option names {'--viewer-url'} already added
+```
+
+use the project-specific options:
+
+```bash
+pytest tests_e2e/ --wsi-slide tumor_005.tif
+```
+
+instead of generic option names.
 
 ---
 
